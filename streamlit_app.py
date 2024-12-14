@@ -72,8 +72,11 @@ match page:
 
         st.write("### Dataset Overview")
         st.write(f"Shape is -> {data.shape}")
-        st.write(f"Columns are -> {data.columns}")
-        st.write(f"Types are ->  {data.dtypes}")
+        st.write("Columns and their Types are ->")
+        
+        column_info = pd.DataFrame({'Type': data.dtypes}).reset_index()
+        column_info.columns = ['Column', 'Type']
+        st.dataframe(column_info)
 
         # Distribution plots
         st.write("### Feature Distributions")
