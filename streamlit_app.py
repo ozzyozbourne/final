@@ -1,8 +1,8 @@
+import sys
 import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
-import plotly.figure_factory as ff
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
@@ -11,10 +11,20 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-# Load dataset
+
+def loadCsvFile(filepath):
+    try:
+        df = pd.read_csv(filepath)
+        print(f"Successfully loaded {filepath}")
+        return df
+    except FileNotFoundError:
+        print(f"Error: The file '{filepath}' was not found. Please check the path.")
+        sys.exit(1)
+
+
 @st.cache_data
 def load_data():
-    data = pd.read_csv('diabetes.csv')
+    data = loadCsvFile('diabetes.csv')
     return data
 
 # Prepare and train models
@@ -247,6 +257,10 @@ elif page == 'Prediction':
     # Display results
     st.write("### Prediction Results")
     
+    # Calculate predictions
+    # Calculate average probability
+    avgProb = (log_reg_pred + rf_pred) / 2
+    
     col1, col2 = st.columns(2)
     with col1:
         st.metric(
@@ -259,13 +273,69 @@ elif page == 'Prediction':
             f"{rf_pred:.2%}"
         )
     
-    # Recommendations
-    st.write("### Recommendations")
-    if log_reg_pred > 0.5 or rf_pred > 0.5:
-        st.warning("Based on the predictions, it's recommended to consult a healthcare provider for further evaluation.")
+    # Risk Assessment and Recommendations
+    st.write("### Risk Assessment and Recommendations")
+
+    if avgProb < 0.2:
+        st.success("🟢 Low Risk (< 20%)")
+        st.write("""
+            - Your risk of diabetes appears to be low
+            - Continue maintaining a healthy lifestyle
+            - Regular exercise and balanced diet recommended
+            - Consider annual health check-ups
+        """)
+    elif avgProb < 0.4:
+        st.info("🔵 Medium Risk (20-40%)")
+        st.write("""
+            - Your risk level suggests increased attention to health factors
+            - Recommend lifestyle modifications:
+                - Regular physical activity (150 minutes/week)
+                - Balanced diet with reduced sugar intake
+                - Regular blood sugar monitoring
+            - Schedule a check-up with your healthcare provider
+        """)
+    elif avgProb < 0.6:
+        st.warning("🟡 High Risk (40-60%)")
+        st.write("""
+            - Your risk level indicates significant concern
+            - Strongly recommended actions:
+                - Immediate consultation with healthcare provider
+                - Comprehensive blood sugar testing
+                - Detailed medical evaluation
+                - Structured diet and exercise plan
+            - Consider diabetes prevention program enrollment
+        """)
+    elif avgProb < 0.8:
+        st.error("🟠 Very High Risk (60-80%)")
+        st.write("""
+            - Your risk level requires immediate attention
+            - Urgent recommended actions:
+                - Schedule immediate medical consultation
+                - Complete diabetes screening
+                - Professional nutritional counseling
+                - Supervised exercise program
+            - Consider regular monitoring with healthcare provider
+        """)
     else:
-        st.success("Your risk of diabetes appears to be low. Continue maintaining a healthy lifestyle.")
-    
+        st.error("🔴 Critical Risk (> 80%)")
+        st.write("""
+            - Your risk level indicates critical attention required
+            - Immediate actions needed:
+                - Emergency medical consultation
+                - Comprehensive diabetes screening
+                - Immediate lifestyle intervention
+                - Regular medical monitoring
+            - Consider specialist referral and diabetes management program
+        """)
+
+    # Display the numerical risk percentage
+    st.write(f"### Overall Risk Percentage: {avgProb:.1%}")
+
+    # Additional context
+    st.info("""
+    ℹ️ **Note**: This assessment is based on machine learning predictions and should be used as a screening tool only. 
+    Always consult healthcare professionals for proper medical diagnosis and advice.
+    """)
     # Feature importance plot (for Random Forest)
     st.write("### Feature Importance")
     feature_importance = pd.DataFrame({
