@@ -275,67 +275,30 @@ elif page == 'Prediction':
     
     # Risk Assessment and Recommendations
     st.write("### Risk Assessment and Recommendations")
-
-    if avgProb < 0.2:
-        st.success("🟢 Low Risk (< 20%)")
-        st.write("""
-            - Your risk of diabetes appears to be low
-            - Continue maintaining a healthy lifestyle
-            - Regular exercise and balanced diet recommended
-            - Consider annual health check-ups
-        """)
-    elif avgProb < 0.4:
-        st.info("🔵 Medium Risk (20-40%)")
-        st.write("""
-            - Your risk level suggests increased attention to health factors
-            - Recommend lifestyle modifications:
-                - Regular physical activity (150 minutes/week)
-                - Balanced diet with reduced sugar intake
-                - Regular blood sugar monitoring
-            - Schedule a check-up with your healthcare provider
-        """)
-    elif avgProb < 0.6:
-        st.warning("🟡 High Risk (40-60%)")
-        st.write("""
-            - Your risk level indicates significant concern
-            - Strongly recommended actions:
-                - Immediate consultation with healthcare provider
-                - Comprehensive blood sugar testing
-                - Detailed medical evaluation
-                - Structured diet and exercise plan
-            - Consider diabetes prevention program enrollment
-        """)
-    elif avgProb < 0.8:
-        st.error("🟠 Very High Risk (60-80%)")
-        st.write("""
-            - Your risk level requires immediate attention
-            - Urgent recommended actions:
-                - Schedule immediate medical consultation
-                - Complete diabetes screening
-                - Professional nutritional counseling
-                - Supervised exercise program
-            - Consider regular monitoring with healthcare provider
-        """)
-    else:
-        st.error("🔴 Critical Risk (> 80%)")
-        st.write("""
-            - Your risk level indicates critical attention required
-            - Immediate actions needed:
-                - Emergency medical consultation
-                - Comprehensive diabetes screening
-                - Immediate lifestyle intervention
-                - Regular medical monitoring
-            - Consider specialist referral and diabetes management program
-        """)
+    
+    match avgProb:
+        case _ if avgProb < 0.1: 
+            st.success("🟢 The model predicts you are in great shape keep up the good work! (< 10%)")
+        case _ if avgProb > 0.1 and avgProb < 0.2:
+            st.info("🔵 The model predicts there is a slight risk of diabetes. Maintaining a healthy diet and regular check-ups are advised! (<20%)")
+        case _ if avgProb > 0.2 and avgProb < 0.3:
+            st.info("🔵 The model predicts Moderate Low Risk (20-30%): Some lifestyle adjustments recommended")
+        case _ if avgProb > 0.3 and avgProb < 0.4:
+            st.info("🔵 The model predicts Moderate Risk (30-40%): Preventive measures should be taken")
+        case _ if avgProb > 0.4 and avgProb < 0.5:
+            st.warning("🟡 The model predicts Elevated Risk (40-50%): Medical attention recommended")
+        case _ if avgProb > 0.5 and avgProb < 0.6:
+            st.warning("🟡 The model predicts High Risk (50-60%): Immediate lifestyle changes needed")
+        case _ if avgProb > 0.6 and avgProb < 0.7:
+            st.warning("🟠 The model predicts Very High Risk (60-70%): Immediate medical attention required")
+        case _ if avgProb > 0.7 and avgProb < 0.8:
+            st.error("🔴 The model predicts Critical Risk (70-80%): Urgent medical intervention needed")
+        case _:
+            st.error("🔴 The model predicts Severe Risk (>80%): Emergency medical attention required")
 
     # Display the numerical risk percentage
-    st.write(f"### Overall Risk Percentage: {avgProb:.1%}")
+    st.write(f"### Overall Risk Percentage based on the average logistical regression and random forest: {avgProb:.1%}")
 
-    # Additional context
-    st.info("""
-    ℹ️ **Note**: This assessment is based on machine learning predictions and should be used as a screening tool only. 
-    Always consult healthcare professionals for proper medical diagnosis and advice.
-    """)
     # Feature importance plot (for Random Forest)
     st.write("### Feature Importance")
     feature_importance = pd.DataFrame({
