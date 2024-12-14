@@ -29,26 +29,25 @@ def loadData():
 
 @st.cache_resource
 def prepareAndTrainModels(data):
-    # Features and target
+
     X = data.drop('Outcome', axis=1)
     y = data['Outcome']
 
-    # Split the data
+
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    # Standardize the features
+
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
 
-    # Train models
+
     log_reg = LogisticRegression()
     rf = RandomForestClassifier()
 
     log_reg.fit(X_train_scaled, y_train)
     rf.fit(X_train_scaled, y_train)
 
-    # Generate predictions
     log_reg_pred = log_reg.predict(X_test_scaled)
     rf_pred = rf.predict(X_test_scaled)
 
@@ -78,7 +77,6 @@ match page:
         column_info.columns = ['Column', 'Type']
         st.dataframe(column_info)
 
-        # Distribution plots
         st.write("### Feature Distributions")
         feature_to_plot = st.selectbox(
             "Select feature to visualize:",
@@ -92,7 +90,6 @@ match page:
                         labels={'Outcome': 'Diabetes Status'})
         st.plotly_chart(fig)
 
-        # Correlation heatmap
         st.write("### Feature Correlations")
         corr = data.corr()
         fig_corr = px.imshow(corr,
@@ -100,7 +97,7 @@ match page:
                             labels=dict(color="Correlation"))
         st.plotly_chart(fig_corr)
 
-        # Scatter plot
+
         st.write("### Feature Relationships")
         col1, col2 = st.columns(2)
         with col1:
@@ -116,15 +113,12 @@ match page:
     case 'Model Evaluation':
         st.title("Model Evaluation")
 
-        # Unpack data
         _, X_test, _, y_test = model_data['data_split']
         log_reg_pred, rf_pred = model_data['predictions']
 
-        # Calculate metrics
         models = ['Logistic Regression', 'Random Forest']
         predictions = [log_reg_pred, rf_pred]
 
-        # Create metrics comparison
         st.write("### Model Performance Metrics")
 
         metrics_data = []
@@ -139,7 +133,6 @@ match page:
 
         metrics_df = pd.DataFrame(metrics_data)
 
-        # Display metrics as a styled table
         st.dataframe(metrics_df.style.format({
             'Accuracy': '{:.3f}',
             'Precision': '{:.3f}',
@@ -147,10 +140,8 @@ match page:
             'F1 Score': '{:.3f}'
         }))
 
-        # Create confusion matrices
         st.write("### Confusion Matrices")
 
-        # Create subplots for confusion matrices
         fig = make_subplots(rows=1, cols=2,
                         subplot_titles=['Logistic Regression Confusion Matrix',
                                         'Random Forest Confusion Matrix'])
@@ -158,7 +149,6 @@ match page:
         for idx, (model_name, y_pred) in enumerate(zip(models, predictions), 1):
             cm = confusion_matrix(y_test, y_pred)
 
-            # Create heatmap
             heatmap = go.Heatmap(
                 z=cm,
                 x=['Predicted Negative', 'Predicted Positive'],
@@ -174,12 +164,10 @@ match page:
         fig.update_layout(height=500)
         st.plotly_chart(fig)
 
-        # ROC Curves
         st.write("### ROC Curves")
 
         from sklearn.metrics import roc_curve, auc
 
-        # Calculate ROC curves
         fig_roc = go.Figure()
 
         for model_name, model in zip(models, model_data['models']):
@@ -214,11 +202,9 @@ match page:
     case 'Prediction':
         st.title("Diabetes Risk Prediction")
 
-        # Unpack models and scaler
         log_reg, rf = model_data['models']
         scaler = model_data['scaler']
 
-        # User input for all features
         st.write("### Enter Your Information")
 
         col1, col2 = st.columns(2)
@@ -234,7 +220,6 @@ match page:
             diabetes_pedigree = st.slider("Diabetes Pedigree Function", 0.078, 2.42, 0.3725)
             age = st.slider("Age (years)", 21, 81, 33)
 
-        # Prepare input for prediction
         user_input = np.array([[
             pregnancies,
             glucose,
@@ -246,18 +231,14 @@ match page:
             age
         ]])
 
-        # Scale the input
         user_input_scaled = scaler.transform(user_input)
 
-        # Predictions
         log_reg_pred = log_reg.predict_proba(user_input_scaled)[:, 1][0]
         rf_pred = rf.predict_proba(user_input_scaled)[:, 1][0]
 
-        # Display results
         st.write("### Prediction Results")
 
-        # Calculate predictions
-        # Calculate average probability
+
         avgProb = (log_reg_pred + rf_pred) / 2
 
         col1, col2 = st.columns(2)
@@ -272,7 +253,6 @@ match page:
                 f"{rf_pred:.2%}"
             )
 
-        # Risk Assessment and Recommendations
         st.write("### Risk Assessment and Recommendations")
 
         match avgProb:
@@ -295,10 +275,8 @@ match page:
             case _:
                 st.error("🔴 The model predicts Severe Risk (>80%): Emergency medical attention required")
 
-        # Display the numerical risk percentage
         st.write(f"### Overall Risk Percentage based on the average logistical regression and random forest: {avgProb:.1%}")
 
-        # Feature importance plot (for Random Forest)
         st.write("### Feature Importance")
         feature_importance = pd.DataFrame({
             'feature': data.drop('Outcome', axis=1).columns,
